@@ -18,7 +18,7 @@ void generatePrime(mpz_t prime, int bits)
     gmp_randinit_default(state); // Сдандартный генератор GMP
     
     // Инициализация генератора случайных чисел
-    mt19937 gen;
+    random_device gen;
     gmp_randseed_ui(state, gen());
     
     // Генерация простого числа заданной битности
@@ -119,4 +119,57 @@ bool loadKey(const string& path, mpz_t n, mpz_t e, mpz_t d)
     // Закрываем файл
     file.close();
     return true;
+}
+
+// Читаем файл
+bool readFile(const string& path, vector<uint8_t>& data)
+{
+    // Открытие файла в бинарном режиме
+    ifstream file(path, ios::binary);
+    // Проверка открытия файла
+    if (!file) return false;
+    // Перемещение в конец файла для получения размера файла
+    // seekg == seek get position
+    // Буквальный перевод строки: переместись на 0 байт относительно конца файла
+    file.seekg(0, ios::end);
+    // Получение и запись размера файла
+    // Принцип: размер == последней позиции в файле
+    //tellg == tell get position
+    size_t size = (size_t)file.tellg();
+    // Перемешение обратно в начало
+    file.seekg(0, ios::beg);
+    // Увеличиваем размер вектора data 
+    data.resize(size);
+    // Запись данных в файл
+    file.read(reinterpret_cast<char*>(&data[0]), size);
+    // Закрытие файла
+    file.close();
+    return true;
+}
+
+// Запись в файл
+bool writeFile(const string& path, const vector<uint8_t>& data)
+{
+    // Открытие файла в бинарном режиме
+    ofstream file(path, ios::binary);
+    // Проверка открытия
+    if (!file) return false;
+    // Запись данных в файл
+    file.write(reinterpret_cast<const char*>(&data[0]), data.size());
+    // Закрытие файла
+    file.close();
+    return true;
+}
+
+// Перевод байт в hex-строку для вывода в консоль
+string hexDisplay(const vector<uint8_t>& data)
+{
+    ostringstream oss; // Строковый поток для вывода в строку
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        // Перевод вывода в режим hex, и перевод из uint8_t в int
+        oss << hex << setw(2) << setfill('0') << (int)data[i];
+        if (i + 1 < data.size()) oss << " ";
+    }
+    return oss.str(); // Возвращаем полученную строку из потока
 }
