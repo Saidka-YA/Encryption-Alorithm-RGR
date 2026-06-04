@@ -1,131 +1,159 @@
 #include "hill.h"
+#include "xor.h"
+#include "filef.h"
 #include <string>
 #include <filesystem>
 
 namespace fs = filesystem;
 
+enum class Algorithm { HILL, XOR };
+enum class Action { ENCRYPT, DECRYPT };
+enum class Source { MANUAL, FILE };
+
 int main() {
     vector<char32_t> alphabet = genalphabet();
 
-    int choice;
-    cout << "1 - Зашифровать\n2 - Расшифровать\n";
-    cout << "Выберите действие: ";
-    cin >> choice;
-    cin.ignore();
+    // Выбор алгоритма
+    string input;
+    Algorithm algo;
+    cout << "Выберите алгоритм (hill / xor): ";
+    cin >> input;
+    if (input == "hill" || input == "HILL") algo = Algorithm::HILL;
+    else if (input == "xor" || input == "XOR") algo = Algorithm::XOR;
+    else { cerr << "Неверный выбор!\n"; return 1; }
 
-    if (choice == 1) {
+    // Выбор действия
+    Action action;
+    cout << "Выберите действие (encrypt / decrypt): ";
+    cin >> input;
+    if (input == "encrypt") action = Action::ENCRYPT;
+    else if (input == "decrypt") action = Action::DECRYPT;
+    else { cerr << "Неверный выбор!\n"; return 1; }
+
+    if (action == Action::ENCRYPT) {
         // Выбор источника текста
-        int source;
-        cout << "1 - Ввести текст вручную\n2 - Прочитать из файла\n";
-        cout << "Выберите источник текста: ";
-        cin >> source;
+        Source source;
+        cout << "Выберите источник текста (manual / file): ";
+        cin >> input;
+        if (input == "manual") source = Source::MANUAL;
+        else if (input == "file") source = Source::FILE;
+        else { cerr << "Неверный выбор!\n"; return 1; }
 
         string text;
-        if (source == 1) {
+        if (source == Source::MANUAL) {
             cin.ignore();
             cout << "Введите текст: ";
             getline(cin, text);
-        } else if (source == 2) {
+        } else {
             string filename;
             cout << "Введите путь к файлу: ";
             cin >> filename;
             cin.ignore();
-            if (fs::is_directory(filename)) {
-                cerr << "Ошибка: '" << filename << "' является директорией, укажите путь к файлу!\n";
-                return 1;
-            }
-            ifstream fin(filename, ios::binary);
-            if (!fin.is_open()) {
-                cerr << "Ошибка: файл '" << filename << "' не найден!\n";
-                return 1;
-            }
-            text.assign(istreambuf_iterator<char>(fin), istreambuf_iterator<char>());
-            fin.close();
+            if (!readFile(filename, text)) return 1;
             cout << "Текст загружен (" << text.size() << " байт)\n";
+        }
+
+        string encrypted;
+
+        if (algo == Algorithm::HILL) {
+            // Генерируем ключ Хилла
+            int n;
+            cout << "Введите размер ключевой матрицы: ";
+            cin >> n;
+            cin.ignore();
+
+            string keyword;
+            cout << "Введите ключевое слово: ";
+            getline(cin, keyword);
+
+            Matrix K = keyFromWord(keyword, n, alphabet);
+            if (K.empty()) return 1;
+
+            // Сохраняем ключ
+            string keyfile;
+            cout << "Введите путь для сохранения ключа (или Enter чтобы пропустить): ";
+            getline(cin, keyfile);
+            if (!keyfile.empty()) {
+                saveKey(K, keyfile);
+                cout << "Ключ сохранён в '" << keyfile << "'\n";
+            }
+
+            size_t len = to_codes(text).size();
+            encrypted = encrypt(text, K, alphabet);
+
+            // Сохраняем шифротекст
+            string encfile;
+            cout << "Введите путь для сохранения шифротекста (или Enter чтобы пропустить): ";
+            getline(cin, encfile);
+            if (!encfile.empty()) {
+                writeFile(encfile, to_string(len) + "\n" + encrypted);
+            }
+
         } else {
-            cerr << "Неверный выбор!\n";
-            return 1;
+            // Генерируем ключ XOR
+            cin.ignore();
+            string keyword;
+            cout << "Введите ключевое слово: ";
+            getline(cin, keyword);
+
+            // Сохраняем ключ
+            string keyfile;
+            cout << "Введите путь для сохранения ключа (или Enter чтобы пропустить): ";
+            getline(cin, keyfile);
+            if (!keyfile.empty()) {
+                saveXorKey(keyword, keyfile);
+                cout << "Ключ сохранён в '" << keyfile << "'\n";
+            }
+
+            encrypted = xor_encrypt(text, keyword, alphabet);
+
+            // Сохраняем шифротекст
+            string encfile;
+            cout << "Введите путь для сохранения шифротекста (или Enter чтобы пропустить): ";
+            getline(cin, encfile);
+            if (!encfile.empty()) {
+                writeFile(encfile, encrypted);
+            }
         }
 
-        // Генерируем ключ
-        int n;
-        cout << "Введите размер ключевой матрицы: ";
-        cin >> n;
-        cin.ignore();
-
-        string keyword;
-        cout << "Введите ключевое слово: ";
-        getline(cin, keyword);
-
-        Matrix K = keyFromWord(keyword, n, alphabet);
-        if (K.empty()) return 1;
-
-        // Сохраняем ключ
-        string keyfile;
-        cout << "Введите путь для сохранения ключа (или Enter чтобы пропустить): ";
-        getline(cin, keyfile);
-        if (!keyfile.empty()) {
-            saveKey(K, keyfile);
-            cout << "Ключ сохранён в '" << keyfile << "'\n";
-        }
-
-        // Шифруем
-        size_t len = to_codes(text).size();
-        string encrypted = encrypt(text, K, alphabet);
         cout << "Зашифрованный текст:\n" << encrypted << "\n";
 
-        // Сохраняем зашифрованный текст
-        string encfile;
-        cout << "Введите путь для сохранения шифротекста (или Enter чтобы пропустить): ";
-        getline(cin, encfile);
-        if (!encfile.empty()) {
-            ofstream fenc(encfile, ios::binary);
-            if (!fenc.is_open()) {
-                cerr << "Ошибка: не удалось создать файл '" << encfile << "'!\n";
-                return 1;
-            }
-            fenc << len << "\n" << encrypted;
-            fenc.close();
-            cout << "Шифротекст сохранён в '" << encfile << "'\n";
-        }
-
-    } else if (choice == 2) {
-        // Загружаем ключ
+    } else {
+        // Дешифрование
         string keyfile;
         cout << "Введите путь к файлу ключа: ";
         cin >> keyfile;
         cin.ignore();
-        Matrix K = loadKey(keyfile);
-        if (K.empty()) return 1;
 
-        // Читаем зашифрованный текст
         string encfile;
         cout << "Введите путь к файлу шифротекста: ";
         cin >> encfile;
         cin.ignore();
-        if (fs::is_directory(encfile)) {
-            cerr << "Ошибка: '" << encfile << "' является директорией, укажите путь к файлу!\n";
-            return 1;
-        }
-        ifstream fin(encfile, ios::binary);
-        if (!fin.is_open()) {
-            cerr << "Ошибка: файл '" << encfile << "' не найден!\n";
-            return 1;
-        }
-        string encContent((istreambuf_iterator<char>(fin)), istreambuf_iterator<char>());
-        fin.close();
 
-        // Извлекаем длину и шифротекст
-        size_t newline = encContent.find('\n');
-        if (newline == string::npos) {
-            cerr << "Ошибка: неверный формат файла шифротекста!\n";
-            return 1;
-        }
-        size_t len = stoul(encContent.substr(0, newline));
-        string encrypted = encContent.substr(newline + 1);
+        string encContent;
+        if (!readFile(encfile, encContent)) return 1;
 
-        // Расшифровываем
-        string decrypted = decrypt(encrypted, K, alphabet, len);
+        string decrypted;
+
+        if (algo == Algorithm::HILL) {
+            Matrix K = loadKey(keyfile);
+            if (K.empty()) return 1;
+
+            size_t newline = encContent.find('\n');
+            if (newline == string::npos) {
+                cerr << "Ошибка: неверный формат файла шифротекста!\n";
+                return 1;
+            }
+            size_t len = stoul(encContent.substr(0, newline));
+            string encrypted = encContent.substr(newline + 1);
+            decrypted = decrypt(encrypted, K, alphabet, len);
+
+        } else {
+            string keyword = loadXorKey(keyfile);
+            if (keyword.empty()) return 1;
+            decrypted = xor_decrypt(encContent, keyword, alphabet);
+        }
+
         cout << "Расшифрованный текст:\n" << decrypted << "\n";
 
         // Сохраняем расшифрованный текст
@@ -133,19 +161,8 @@ int main() {
         cout << "Введите путь для сохранения расшифрованного текста (или Enter чтобы пропустить): ";
         getline(cin, decfile);
         if (!decfile.empty()) {
-            ofstream fdec(decfile, ios::binary);
-            if (!fdec.is_open()) {
-                cerr << "Ошибка: не удалось создать файл '" << decfile << "'!\n";
-                return 1;
-            }
-            fdec << decrypted;
-            fdec.close();
-            cout << "Расшифрованный текст сохранён в '" << decfile << "'\n";
+            writeFile(decfile, decrypted);
         }
-
-    } else {
-        cerr << "Неверный выбор!\n";
-        return 1;
     }
 
     return 0;
