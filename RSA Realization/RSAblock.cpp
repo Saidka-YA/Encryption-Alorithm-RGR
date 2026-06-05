@@ -1,13 +1,5 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <cstdint>
-#include <fstream>
-#include <random>
-#include <sstream>
-#include <iomanip>
-#include <cstring>
-#include <gmp.h>
+#include "RSAblock.h"
+#include "RSAutilities.h"
 using namespace std;
 
 // Функция модульного возведения в степень
