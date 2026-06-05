@@ -1,5 +1,4 @@
 #include "hill.h"
-#include "xor.h"
 #include "filef.h"
 #include <string>
 #include <filesystem>
@@ -79,7 +78,7 @@ int main() {
             }
 
             size_t len = to_codes(text).size();
-            encrypted = encrypt(text, K, alphabet);
+            encrypted = hillEncrypt(text, K, alphabet);
 
             // Сохраняем шифротекст
             string encfile;
@@ -89,31 +88,6 @@ int main() {
                 writeFile(encfile, to_string(len) + "\n" + encrypted);
             }
 
-        } else {
-            // Генерируем ключ XOR
-            cin.ignore();
-            string keyword;
-            cout << "Введите ключевое слово: ";
-            getline(cin, keyword);
-
-            // Сохраняем ключ
-            string keyfile;
-            cout << "Введите путь для сохранения ключа (или Enter чтобы пропустить): ";
-            getline(cin, keyfile);
-            if (!keyfile.empty()) {
-                saveXorKey(keyword, keyfile);
-                cout << "Ключ сохранён в '" << keyfile << "'\n";
-            }
-
-            encrypted = xor_encrypt(text, keyword, alphabet);
-
-            // Сохраняем шифротекст
-            string encfile;
-            cout << "Введите путь для сохранения шифротекста (или Enter чтобы пропустить): ";
-            getline(cin, encfile);
-            if (!encfile.empty()) {
-                writeFile(encfile, encrypted);
-            }
         }
 
         cout << "Зашифрованный текст:\n" << encrypted << "\n";
@@ -146,12 +120,8 @@ int main() {
             }
             size_t len = stoul(encContent.substr(0, newline));
             string encrypted = encContent.substr(newline + 1);
-            decrypted = decrypt(encrypted, K, alphabet, len);
+            decrypted = hillDecrypt(encrypted, K, alphabet, len);
 
-        } else {
-            string keyword = loadXorKey(keyfile);
-            if (keyword.empty()) return 1;
-            decrypted = xor_decrypt(encContent, keyword, alphabet);
         }
 
         cout << "Расшифрованный текст:\n" << decrypted << "\n";

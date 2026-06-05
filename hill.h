@@ -25,7 +25,7 @@ bool isRightKey(const Matrix& A, int m);
 Matrix keyFromWord(const string& word, int n, const vector<char32_t>& alphabet);
 
 // Шифрование / дешифрование
-string encrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet);
-string decrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet, size_t len);
+string hillEncrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet);
+string hillDecrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet, size_t len);
 
 #endif

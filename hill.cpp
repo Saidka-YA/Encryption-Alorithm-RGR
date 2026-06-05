@@ -165,7 +165,7 @@ Matrix keyFromWord(const string& word, int n, const vector<char32_t>& alphabet) 
 }
 
 // Шифрование
-string encrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet) {
+string hilLEncrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet) {
     int n = K.size();
     int m = alphabet.size();
 
@@ -199,13 +199,13 @@ string encrypt(const string& text, const Matrix& K, const vector<char32_t>& alph
 }
 
 // Дешифрование
-string decrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet, size_t len) {
+string hillDecrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet, size_t len) {
     if (!isRightKey(K, alphabet.size())) {
         cerr << "Ошибка: ключ не подходит для дешифрования!\n";
         return "";
     }
     Matrix Kinv = invMatrix(K, alphabet.size());
-    string decrypted = encrypt(text, Kinv, alphabet);
+    string decrypted = hillEncrypt(text, Kinv, alphabet);
 
     vector<char32_t> codes = to_codes(decrypted);
     if (len < codes.size()) codes.resize(len);
