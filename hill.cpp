@@ -165,7 +165,7 @@ Matrix keyFromWord(const string& word, int n, const vector<char32_t>& alphabet) 
 }
 
 // Шифрование
-string hilLEncrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet) {
+string hillEncrypt(const string& text, const Matrix& K, const vector<char32_t>& alphabet) {
     int n = K.size();
     int m = alphabet.size();
 
