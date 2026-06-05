@@ -139,12 +139,11 @@ void encryptData(const vector<uint8_t>& plaintext, vector<uint8_t>& ciphertext,
     mpz_clear(c);
 }
 
-// Функция расшифрования данных
 void decryptData(const vector<uint8_t>& ciphertext, vector<uint8_t>& plaintext, 
                  const mpz_t n, const mpz_t d)
 {
     size_t pos = 0;
-    int blockSize = 64; // Размер расшифрованного блока
+    int blockSize = 64;
     
     mpz_t c, message;
     mpz_init(c);
@@ -152,34 +151,28 @@ void decryptData(const vector<uint8_t>& ciphertext, vector<uint8_t>& plaintext,
     
     while(pos < ciphertext.size())
     {
-        // Защита от выхода за границу массива
         if(pos + 2 > ciphertext.size()) break;
         
-        // Читаем размер c
         size_t cSize = ((size_t)ciphertext[pos] << 8) | ciphertext[pos + 1];
         pos += 2;
         
         if(pos + cSize > ciphertext.size()) break;
         
-        // Читаем c
         mpz_import(c, cSize, 1, sizeof(uint8_t), 0, 0, &ciphertext[pos]);
         pos += cSize;
         
-        // Расшифровываем блок
         decryptBlock(message, c, n, d);
         
-        // Преобразуем обратно в байты
-        vector<uint8_t> blockBytes(blockSize);
-        size_t count;
-        mpz_export(&blockBytes[0], &count, 1, sizeof(uint8_t), 0, 0, message);
+        // Получаем байты числа
+        size_t exportedSize = (mpz_sizeinbase(message, 2) + 7) / 8;
+        vector<uint8_t> blockBytes(blockSize, 0); // Инициализируем нулями
         
-        // Дополняем нулями если нужно
-        for(size_t j = count; j < blockSize; j++)
+        if(exportedSize <= (size_t)blockSize)
         {
-            blockBytes[j] = 0;
+            size_t count;
+            mpz_export(&blockBytes[blockSize - exportedSize], &count, 1, sizeof(uint8_t), 0, 0, message);
         }
         
-        // Записываем расшифрованный блок
         for(int j = 0; j < blockSize; j++)
         {
             plaintext.push_back(blockBytes[j]);
