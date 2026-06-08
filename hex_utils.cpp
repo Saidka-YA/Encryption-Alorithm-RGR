@@ -32,3 +32,25 @@ unsigned char hexToByte(const string& hex) {
     
     return static_cast<unsigned char>((high << 4) | low);
 }
+
+pair<int, int> hexDigitToCoords(char hexDigit) {
+    int val;
+    if (hexDigit >= '0' && hexDigit <= '9') {
+        val = hexDigit - '0';
+    } else if (hexDigit >= 'A' && hexDigit <= 'F') {
+        val = hexDigit - 'A' + 10;
+    } else if (hexDigit >= 'a' && hexDigit <= 'f') {
+        val = hexDigit - 'a' + 10;
+    } else {
+        throw invalid_argument(string("Недопустимый hex-символ: '") + hexDigit + "'");
+    }
+    return make_pair(val / 4, val % 4);
+}
+
+char coordsToHexDigit(int row, int col) {
+    if (row < 0 || row > 3 || col < 0 || col > 3) {
+        throw invalid_argument("координаты вне диапазона 0-3");
+    }
+    int val = row * 4 + col;
+    return (val < 10) ? ('0' + val) : ('A' + val - 10);
+}
