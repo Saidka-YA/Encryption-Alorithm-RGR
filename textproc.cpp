@@ -4,29 +4,27 @@
 vector<char32_t> genalphabet() {
     vector<char32_t> alphabet;
 
-    // A-Z
-    for (char32_t c = 0x41; c <= 0x5A; ++c) alphabet.push_back(c);
-    // a-z
-    for (char32_t c = 0x61; c <= 0x7A; ++c) alphabet.push_back(c);
-    // А-Я + Ё
-    for (char32_t c = 0x410; c <= 0x42F; ++c) alphabet.push_back(c);
-    alphabet.push_back(0x401); // Ё
-    // а-я + ё
-    for (char32_t c = 0x430; c <= 0x44F; ++c) alphabet.push_back(c);
-    alphabet.push_back(0x451); // ё
-    // 0-9
-    for (char32_t c = 0x30; c <= 0x39; ++c) alphabet.push_back(c);
+    // Управляющие символы \t, \n, \r
+    for (char32_t c : {(char32_t)0x09, (char32_t)0x0A, (char32_t)0x0D})
+        alphabet.push_back(c);
 
-    // Знаки препинания
-    const char32_t punct[] = {
-        0x20, 0x21, 0x40, 0x23, 0x24, 0x25, 0x5E, 0x26, 0x2A,
-        0x28, 0x29, 0x2D, 0x5F, 0x3D, 0x2B, 0x5C, 0x7C, 0x2F,
-        0x22, 0x3A, 0x3B, 0x2E, 0x2C, 0x3F, 0xA, 0xD, 0x9,
-        0xAB, 0xBB, 0x2014, 0x2013, 0x2026, 0x2018, 0x2019, 0x201C, 0x201D
-    };
-    for (char32_t c : punct) alphabet.push_back(c);
+    // Вся ASCII
+    for (char32_t c = 0x20; c <= 0x7E; ++c)
+        alphabet.push_back(c);
 
-    return alphabet;
+    // тире, кавычки, многоточие, неразрывный дефиз и прочее
+    for (char32_t c = 0x2000; c <= 0x206F; ++c)
+        alphabet.push_back(c);
+        
+    // дополнительные символы «», неразрывный пробел и прочее
+    for (char32_t c = 0xA0; c <= 0xFF; ++c)
+        alphabet.push_back(c);
+
+    // Вся кириллица
+    for (char32_t c = 0x400; c <= 0x4FF; ++c)
+        alphabet.push_back(c);
+
+    return alphabet; // Итого: 3 + 95 + 256 = 354 символа
 }
 
 // UTF-8 строка в вектор кодпоинтов
