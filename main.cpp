@@ -81,16 +81,13 @@ int main() {
                 cout << "Ключ сохранён в '" << keyfile << "'\n";
             }
 
-            size_t len = text.size(); // ИСПРАВЛЕНО: теперь это просто размер строки в байтах
+            size_t len = text.size();
             encrypted = hillEncrypt(text, K);
             
             string encfile;
             cout << "Введите путь для сохранения шифротекста (или Enter чтобы пропустить): ";
             getline(cin, encfile);
             if (!encfile.empty()) {
-                // ИСПОЛЬЗУЕМ БИНАРНЫЙ ЗАГОЛОВОК (4 байта) вместо текстового "\n".
-                // Это критически важно, так как в бинарных данных символ \n (0x0A) 
-                // может встретиться случайно и сломать поиск разделителя при дешифровании.
                 ofstream f(encfile, ios::binary);
                 if (f) {
                     uint32_t len32 = static_cast<uint32_t>(len);
