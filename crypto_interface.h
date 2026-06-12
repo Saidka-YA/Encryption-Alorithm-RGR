@@ -35,3 +35,10 @@ inline void secure_clear_memory(void* v, size_t n) {
 #endif
 
 #endif
+
+#ifdef __cplusplus
+inline void secure_clear_memory(void* v, size_t n) {
+    volatile uint8_t* p = static_cast<volatile uint8_t*>(v);
+    while (n--) *p++ = 0;
+}
+#endif
